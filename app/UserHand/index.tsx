@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import CardGroup, { CardsProps } from "./CardGroup";
+import CardGroup, { CardsProps, dropDataProps } from "./CardGroup";
 
 const cardsInHandData: CardsProps[] = [
   [
@@ -28,10 +28,15 @@ const cardsInHandData: CardsProps[] = [
 const UserHand = () => {
   const [cardsInHand, setCardsInHandData] = useState(cardsInHandData);
 
+  const handleDrop = (dropData: dropDataProps) => {
+    console.log("Card dropped:", dropData);
+    // Logic to update the state and move the card to the new position
+  };
+
   return (
     <View style={styles.cardGroupContainer}>
       {cardsInHand.map((cardGrp, i) => (
-        <CardGroup cards={cardGrp} key={i} />
+        <CardGroup cards={cardGrp} key={i} onDrop={handleDrop} groupIndex={i} />
       ))}
     </View>
   );

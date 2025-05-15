@@ -1,5 +1,5 @@
-import React from "react";
-import { Image, StyleSheet, View } from "react-native";
+import React, { useRef } from "react";
+import { Animated, Image, PanResponder, StyleSheet, View } from "react-native";
 
 export interface CardProps {
   id: number;
@@ -7,6 +7,7 @@ export interface CardProps {
   title: string;
   image: string;
   description: string;
+  style?: object; // Optional style prop
 }
 
 const allCardDetails = {
@@ -60,7 +61,7 @@ const allCardDetails = {
   },
 };
 
-const Card: React.FC<CardProps> = ({ cardId }) => {
+const CardView: React.FC<CardProps> = ({ cardId }) => {
   const cardPosition = allCardDetails[cardId];
 
   return (
@@ -76,6 +77,50 @@ const Card: React.FC<CardProps> = ({ cardId }) => {
         }}
       />
     </View>
+  );
+};
+
+
+const Card: React.FC<CardProps & {
+  onDragStart?: (cardId: number) => void;
+  onDragMove?: (cardId: number, position: { x: number; y: number }) => void;
+  onDrop?: (cardId: number, dropPosition: { x: number; y: number }) => void;
+}> = ({ onDragStart, onDragMove, onDrop, ...props }) => {
+  const pan = useRef(new Animated.ValueXY()).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        if (onDragStart) {
+          onDragStart(props.id);
+        }
+      },
+      onPanResponderMove: (event, gestureState) => {
+        pan.setValue({ x: gestureState.dx, y: gestureState.dy });
+        if (onDragMove) {
+          onDragMove(props.id, { x: gestureState.moveX, y: gestureState.moveY });
+        }
+      },
+      onPanResponderRelease: (e, gestureState) => {
+        if (onDrop) {
+          onDrop(props.id, { x: gestureState.moveX, y: gestureState.moveY });
+        }
+        Animated.spring(pan, {
+          toValue: { x: 0, y: 0 },
+          useNativeDriver: false,
+        }).start();
+      },
+    })
+  ).current;
+
+  return (
+    <Animated.View
+      style={[props.style, { transform: [{ translateX: pan.x }, { translateY: pan.y }] }]} // Apply style prop here
+      {...panResponder.panHandlers}
+    >
+      <CardView {...props} />
+    </Animated.View>
   );
 };
 

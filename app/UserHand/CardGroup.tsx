@@ -3,22 +3,51 @@ import { StyleSheet, View } from "react-native";
 import Card, { CardProps } from "./Card";
 
 export type CardsProps = CardProps[];
+export type dropDataProps = {
+    dragCardGroupIndex: number;
+    dargCardIndex: number;
+    cardId: number;
+    cardInfo: CardProps;
+    dropPosition: { x: number; y: number };
+  }
 
 interface CardGroupProps {
   cards: CardsProps;
+  onDragStart?: (cardId: number) => void;
+  onDragMove?: (cardId: number, position: { x: number; y: number }) => void;
+  onDrop?: (dropData: dropDataProps) => void;
+  groupIndex: number
 }
 
-const CardGroup: React.FC<CardGroupProps> = ({ cards }) => {
+const CardGroup: React.FC<CardGroupProps> = ({ cards, onDragStart, onDragMove, onDrop, groupIndex }) => {
   return (
     <View style={styles.cardGroupContainer}>
-      {cards.map((cardItem) => {
-        return <View key={cardItem.id} style={styles.carWrapper}>
-          <Card  {...cardItem} />
-        </View>;
+      {cards.map((cardItem, cardIndex) => {
+        return (
+          <Card
+            key={cardItem.id}
+            {...cardItem}
+            onDragStart={onDragStart}
+            onDragMove={onDragMove}
+            onDrop={(cardId, dropPosition) => {
+              if (onDrop) {
+                onDrop({
+                  dragCardGroupIndex: groupIndex,
+                  dargCardIndex: cardIndex,
+                  cardId,
+                  cardInfo: cardItem,
+                  dropPosition,
+                });
+              }
+            }}
+            style={styles.carWrapper}
+          />
+        );
       })}
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   cardGroupContainer: {
